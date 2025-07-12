@@ -24,21 +24,9 @@ export function Header() {
   const navLinks = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/swaps', label: 'Swap Requests', icon: Repeat, auth: true },
-    { href: '/profile', label: 'Your Board', icon: User, auth: true },
   ];
-
-  if (pathname === '/login' || pathname === '/register') {
-      return (
-         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
-                <Link href="/" className="text-xl font-bold">Skill Swap Platform</Link>
-                <Button asChild variant="ghost">
-                    <Link href="/">Home</Link>
-                </Button>
-            </div>
-         </header>
-      )
-  }
+  
+  const isAuthPage = pathname === '/login' || pathname === '/register';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -47,24 +35,23 @@ export function Header() {
           <Link href="/" className="text-xl font-bold">Skill Swap Platform</Link>
         </div>
         
-        <nav className="flex flex-1 items-center gap-2">
-            {navLinks.map(link => {
-                if (link.auth && !user) return null;
-                const isActive = pathname === link.href;
-                return (
-                    <Button key={link.href} variant={isActive ? "secondary" : "ghost"} asChild>
-                        <Link href={link.href} className={cn(isActive && "font-bold")}>{link.label}</Link>
-                    </Button>
-                )
-            })}
-        </nav>
+        {!isAuthPage && (
+          <nav className="flex flex-1 items-center gap-2">
+              {navLinks.map(link => {
+                  if (link.auth && !user) return null;
+                  const isActive = pathname === link.href;
+                  return (
+                      <Button key={link.href} variant={isActive ? "secondary" : "ghost"} asChild>
+                          <Link href={link.href} className={cn(isActive && "font-bold")}>{link.label}</Link>
+                      </Button>
+                  )
+              })}
+          </nav>
+        )}
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-1 items-center justify-end gap-4">
             {loading ? (
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-8 w-24" />
-              </div>
+              <Skeleton className="h-10 w-10 rounded-full" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -99,9 +86,11 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
+              !isAuthPage && (
                 <Button asChild>
                   <Link href="/login">Login</Link>
                 </Button>
+              )
             )}
         </div>
       </div>
