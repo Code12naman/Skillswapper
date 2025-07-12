@@ -32,7 +32,8 @@ Admin Role
 | Naman Sharma |  namansharma102938@gmail.com |
 | Poorva Jain  |  jainpoorva535@gmail.com     |
 
-
+📽️ Demo Video 
+https://drive.google.com/file/d/1xiyULm0o16jLhYQuVrx8xABlzJd68mmQ/view?usp=drivesdk
 
 
 🛠️ Technologies Used _(Optional)_
@@ -41,6 +42,7 @@ Admin Role
 - Backend: Next.js API routes, Node.js
 - Database: MongoDB Atlas, Mongoose
 - Authentication: Custom login & register API
+
 
 
 ---
