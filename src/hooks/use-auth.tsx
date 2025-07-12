@@ -1,13 +1,16 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { UserProfile, SkillSwap } from '@/lib/types';
 import { mockUsers, mockSwaps as initialSwaps } from '@/lib/mock-data';
 
-interface AuthContextType {
+interface Session {
   user: UserProfile | null;
-  loading: boolean;
   swaps: SkillSwap[];
+}
+
+interface AuthContextType extends Session {
+  loading: boolean;
   login: (details: { email: string; name?: string }) => void;
   logout: () => void;
   updateUser: (updatedProfile: Partial<UserProfile>) => void;
@@ -16,66 +19,68 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const defaultSession: Session = {
+  user: null,
+  swaps: [],
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [swaps, setSwaps] = useState<SkillSwap[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState<Session>(defaultSession);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     try {
-      const sessionUser = sessionStorage.getItem('skill-swap-user');
-      if (sessionUser) {
-        const loggedInUser = JSON.parse(sessionUser);
-        const userInMock = mockUsers.find(u => u.id === loggedInUser.id);
-        if (userInMock) {
-            // Update the mock user with the session data to keep it consistent
-            Object.assign(userInMock, loggedInUser);
-        }
-        setUser(loggedInUser);
+      const storedUser = sessionStorage.getItem('skill-swap-user');
+      const storedSwaps = sessionStorage.getItem('skill-swap-swaps');
+      
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      let swaps = storedSwaps ? JSON.parse(storedSwaps) : initialSwaps;
+
+      if (!storedSwaps) {
+        sessionStorage.setItem('skill-swap-swaps', JSON.stringify(initialSwaps));
       }
       
-      const sessionSwaps = sessionStorage.getItem('skill-swap-swaps');
-      if (sessionSwaps) {
-        setSwaps(JSON.parse(sessionSwaps));
-      } else {
-        sessionStorage.setItem('skill-swap-swaps', JSON.stringify(initialSwaps));
-        setSwaps(initialSwaps);
+      if (user) {
+         // Also update the user in the main mockUsers array to persist across sessions
+        const userIndex = mockUsers.findIndex(u => u.id === user.id);
+        if (userIndex !== -1) {
+            mockUsers[userIndex] = { ...mockUsers[userIndex], ...user };
+        }
       }
+
+      setSession({ user, swaps });
+
     } catch (error) {
-      console.error("Session storage not available.", error);
+      console.error("Session storage not available or corrupted.", error);
+      setSession(defaultSession);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   }, []);
 
-  const updateUserInSession = (updatedUser: UserProfile | null) => {
-    setUser(updatedUser);
-    try {
-      if (updatedUser) {
-        sessionStorage.setItem('skill-swap-user', JSON.stringify(updatedUser));
-      } else {
-        sessionStorage.removeItem('skill-swap-user');
+  const updateSession = useCallback((newSession: Partial<Session>) => {
+    setSession(prevSession => {
+      const updatedSession = { ...prevSession, ...newSession };
+      try {
+        if (updatedSession.user) {
+          sessionStorage.setItem('skill-swap-user', JSON.stringify(updatedSession.user));
+        } else {
+          sessionStorage.removeItem('skill-swap-user');
+        }
+        sessionStorage.setItem('skill-swap-swaps', JSON.stringify(updatedSession.swaps));
+      } catch (error) {
+        console.error("Could not update session storage", error);
       }
-    } catch (error) {
-      console.error("Could not update user in session storage", error);
-    }
-  }
+      return updatedSession;
+    });
+  }, []);
 
-  const updateSwapsInSession = (updatedSwaps: SkillSwap[]) => {
-    setSwaps(updatedSwaps);
-    try {
-      sessionStorage.setItem('skill-swap-swaps', JSON.stringify(updatedSwaps));
-    } catch (error) {
-      console.error("Could not update swaps in session storage", error);
-    }
-  };
 
   const login = ({ email, name }: { email: string; name?: string }) => {
-    setLoading(true);
-    let existingUser = mockUsers.find(u => u.email === email);
+    let userToLogin = mockUsers.find(u => u.email === email);
     
-    if (!existingUser && name) {
+    if (!userToLogin && name) { // Registration flow
         const newUser: UserProfile = {
             id: new Date().getTime().toString(),
             name: name,
@@ -86,66 +91,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             availability: ['Weekends'],
             ratings: { average: 0, count: 0 },
             bio: 'Just joined! Looking forward to swapping skills.',
-            profilePhotoUrl: 'https://placehold.co/128x128.png',
+            profilePhotoUrl: `https://placehold.co/128x128.png`,
         };
         mockUsers.push(newUser);
-        existingUser = newUser;
-    } else if (!existingUser) {
-       // For login, if user doesn't exist, don't log in.
-       // In a real app, you'd show an error. Here we just do nothing.
-       setLoading(false);
-       return;
+        userToLogin = newUser;
     }
 
-    updateUserInSession(existingUser);
-
-    try {
-      const allSwapsJSON = sessionStorage.getItem('skill-swap-swaps');
-      const allSwaps = allSwapsJSON ? JSON.parse(allSwapsJSON) : initialSwaps;
-      const userSwaps = allSwaps.filter((s: SkillSwap) => s.requesterId === existingUser!.id || s.receiverId === existingUser!.id);
-      setSwaps(userSwaps);
-    } catch(e) {
-      console.error(e);
-      setSwaps([]);
+    if(userToLogin) {
+      updateSession({ user: userToLogin });
     }
-    
-    setLoading(false);
   };
 
   const logout = () => {
-    updateUserInSession(null);
-    setSwaps([]); 
+    updateSession({ user: null });
   };
 
   const updateUser = (updatedProfile: Partial<UserProfile>) => {
-    if (user) {
-      const updatedUser = { ...user, ...updatedProfile };
-      updateUserInSession(updatedUser);
-
-      // Also update the user in the main mockUsers array to persist across sessions
-      const userIndex = mockUsers.findIndex(u => u.id === user.id);
+    if (session.user) {
+      const updatedUser = { ...session.user, ...updatedProfile };
+      
+      const userIndex = mockUsers.findIndex(u => u.id === session.user!.id);
       if (userIndex !== -1) {
         mockUsers[userIndex] = { ...mockUsers[userIndex], ...updatedUser };
       }
+      updateSession({ user: updatedUser });
     }
   };
 
   const addSwap = (newSwap: SkillSwap) => {
-    try {
-      const allSwapsJSON = sessionStorage.getItem('skill-swap-swaps');
-      let allSwaps = allSwapsJSON ? JSON.parse(allSwapsJSON) : initialSwaps;
-      allSwaps.push(newSwap);
-      updateSwapsInSession(allSwaps);
-      if (user) {
-          const userSwaps = allSwaps.filter((s: SkillSwap) => s.requesterId === user.id || s.receiverId === user.id);
-          setSwaps(userSwaps);
-      }
-    } catch(e) {
-        console.error(e)
-    }
+    const newSwaps = [...session.swaps, newSwap];
+    updateSession({ swaps: newSwaps });
   };
 
-  const value = { user, loading, login, logout, updateUser, swaps, addSwap };
+  const value = { ...session, loading, login, logout, updateUser, addSwap };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
