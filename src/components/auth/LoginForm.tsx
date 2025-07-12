@@ -33,7 +33,7 @@ export function LoginForm() {
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // In a real app, you'd call Firebase here.
-    login(values.email);
+    login({ email: values.email });
     toast({
       title: 'Login Successful',
       description: "Welcome back! You're now logged in.",

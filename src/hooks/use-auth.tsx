@@ -7,7 +7,7 @@ import { mockUsers } from '@/lib/mock-data';
 interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
-  login: (email: string) => void;
+  login: (details: { email: string; name?: string }) => void;
   logout: () => void;
 }
 
@@ -33,12 +33,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const login = (email: string) => {
+  const login = ({ email, name }: { email: string; name?: string }) => {
     setLoading(true);
     // In a real app, this would be an API call to Firebase Auth
-    const userToLogin = mockUsers.find(u => u.email === email) || MOCK_LOGGED_IN_USER;
+    let userToLogin: UserProfile;
+
+    if (name) {
+      // This is a new registration
+      userToLogin = {
+        id: new Date().getTime().toString(), // semi-unique id
+        name,
+        email,
+        isPublic: true,
+        skillsOffered: [],
+        skillsWanted: [],
+        availability: ['Weekends'],
+        ratings: { average: 0, count: 0 },
+        bio: 'Just joined! Looking forward to swapping skills.',
+      };
+    } else {
+      // This is an existing user logging in
+      userToLogin = mockUsers.find(u => u.email === email) || MOCK_LOGGED_IN_USER;
+    }
+    
     setUser(userToLogin);
-     try {
+    
+    try {
         sessionStorage.setItem('skill-swap-user', JSON.stringify(userToLogin));
     } catch (error) {
         // Could be running in an environment without sessionStorage

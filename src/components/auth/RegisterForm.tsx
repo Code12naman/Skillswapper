@@ -32,7 +32,7 @@ export function RegisterForm() {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // In a real app, you'd call Firebase to create a user.
     // For this mock, we'll just log them in.
-    login(values.email);
+    login({ email: values.email, name: values.name });
     toast({
       title: 'Account Created',
       description: "Welcome! Your account has been successfully created.",
