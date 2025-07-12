@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function EditProfilePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, updateUser } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -36,7 +36,18 @@ export default function EditProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically update the user data in your backend
+    if (!user) return;
+
+    const offeredArray = skillsOffered.split(',').map(s => s.trim()).filter(Boolean);
+    const wantedArray = skillsWanted.split(',').map(s => s.trim()).filter(Boolean);
+
+    updateUser({
+      name,
+      bio,
+      skillsOffered: offeredArray,
+      skillsWanted: wantedArray,
+    });
+    
     toast({
       title: 'Profile Updated',
       description: 'Your changes have been saved successfully.',
