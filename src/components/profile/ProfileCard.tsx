@@ -12,7 +12,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({ user }: ProfileCardProps) {
   return (
-    <Card className="flex h-full flex-col overflow-hidden transition-all hover:shadow-lg hover:border-primary/50 bg-card">
+    <Card className="flex h-full flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:border-primary/50 hover:-translate-y-1 bg-card">
       <CardHeader className="p-4">
         <div className="flex items-center gap-4">
             <Avatar className="h-12 w-12 border">

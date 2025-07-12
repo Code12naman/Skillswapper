@@ -30,7 +30,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center">
         <div className="mr-6 flex items-center">
-          <Link href="/" className="text-xl font-bold">Skill Swap Platform</Link>
+          <Link href="/" className="text-xl font-bold transition-colors hover:text-primary">Skill Swap Platform</Link>
         </div>
         
         <nav className="flex flex-1 items-center gap-2">
@@ -51,7 +51,7 @@ export function Header() {
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full transition-transform hover:scale-105">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : undefined} alt={user.name} data-ai-hint="profile avatar" />
                       <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>

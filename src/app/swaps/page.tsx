@@ -55,7 +55,7 @@ export default function SwapsPage() {
     }
 
     return (
-        <Card>
+        <Card className="transition-all hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                     <Avatar>
