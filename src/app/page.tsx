@@ -14,12 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Home() {
+  const { user: currentUser } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const profilesPerPage = 8;
   
-  const publicProfiles = mockUsers.filter(user => user.isPublic);
+  const publicProfiles = mockUsers.filter(user => user.isPublic && user.id !== currentUser?.id);
 
   const totalPages = Math.ceil(publicProfiles.length / profilesPerPage);
   const indexOfLastProfile = currentPage * profilesPerPage;
