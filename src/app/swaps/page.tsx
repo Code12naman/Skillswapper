@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check, X } from 'lucide-react';
-import { mockSwaps } from '@/lib/mock-data';
 import { formatDistanceToNow } from 'date-fns';
 import type { SkillSwap } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 export default function SwapsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, swaps } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -37,8 +36,8 @@ export default function SwapsPage() {
     );
   }
 
-  const incomingRequests = mockSwaps.filter(swap => swap.receiverId === user.id);
-  const outgoingRequests = mockSwaps.filter(swap => swap.requesterId === user.id);
+  const incomingRequests = swaps.filter(swap => swap.receiverId === user.id);
+  const outgoingRequests = swaps.filter(swap => swap.requesterId === user.id);
   
   const SwapCard = ({ swap }: { swap: SkillSwap }) => {
     const isRequester = swap.requesterId === user.id;
@@ -66,7 +65,7 @@ export default function SwapsPage() {
                     <div>
                       <div className="font-semibold">{otherPerson.name}</div>
                       <div className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(swap.createdAt, { addSuffix: true })}
+                          {formatDistanceToNow(new Date(swap.createdAt), { addSuffix: true })}
                       </div>
                     </div>
                 </div>

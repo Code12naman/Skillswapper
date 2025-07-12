@@ -9,8 +9,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import type { UserProfile } from '@/lib/types';
+import type { UserProfile, SkillSwap } from '@/lib/types';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
   offeredSkill: z.string().min(1, { message: 'Please select a skill to offer.' }),
@@ -26,6 +27,7 @@ interface SwapRequestFormProps {
 export function SwapRequestForm({ currentUser, otherUser }: SwapRequestFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { addSwap } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,8 +39,24 @@ export function SwapRequestForm({ currentUser, otherUser }: SwapRequestFormProps
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // In a real app, this would create a new swap document in Firestore.
-    console.log('Swap Request Submitted:', values);
+    const newSwap: SkillSwap = {
+      id: `swap_${new Date().getTime()}`,
+      requesterId: currentUser.id,
+      requesterName: currentUser.name,
+      requesterPhotoUrl: currentUser.profilePhotoUrl,
+      receiverId: otherUser.id,
+      receiverName: otherUser.name,
+      receiverPhotoUrl: otherUser.profilePhotoUrl,
+      offeredSkill: values.offeredSkill,
+      requestedSkill: values.requestedSkill,
+      message: values.message || '',
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    addSwap(newSwap);
+    
     toast({
       title: 'Swap Request Sent!',
       description: `Your request to swap skills with ${otherUser.name} has been sent.`,
