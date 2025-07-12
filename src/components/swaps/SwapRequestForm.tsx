@@ -32,7 +32,7 @@ export function SwapRequestForm({ currentUser, otherUser }: SwapRequestFormProps
     defaultValues: {
       offeredSkill: '',
       requestedSkill: '',
-      message: `Hi ${otherUser.name}, I'd love to swap skills with you!`,
+      message: `Hi ${otherUser.name.split(' ')[0]}, I'd love to swap skills with you!`,
     },
   });
 
