@@ -3,19 +3,56 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, MapPin, Star } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowRight, MapPin, Star, MessageSquarePlus } from 'lucide-react';
 import { SkillBadge } from '@/components/profile/SkillBadge';
 import { mockUsers } from '@/lib/mock-data';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { SwapRequestForm } from '@/components/swaps/SwapRequestForm';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function UserProfilePage({ params }: { params: { id: string } }) {
+  const { user: currentUser, loading: authLoading } = useAuth();
+  const router = useRouter();
   const user = mockUsers.find(u => u.id === params.id);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   if (!user || !user.isPublic) {
-    // In a real app, you might show a "This profile is private" message
-    // For now, we'll just 404.
     notFound();
+  }
+
+  if (isClient && authLoading) {
+    return (
+        <div className="container mx-auto max-w-4xl py-12">
+            <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
+            <div className="flex w-full flex-col items-center gap-4 md:w-auto">
+                <Skeleton className="h-32 w-32 rounded-full" />
+                <Skeleton className="h-10 w-40" />
+            </div>
+            <div className="flex-1 space-y-6">
+                <Skeleton className="h-10 w-1/2" />
+                <Skeleton className="h-6 w-3/4" />
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Card><CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+                <Card><CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+                </div>
+            </div>
+            </div>
+      </div>
+    );
   }
 
   return (
@@ -26,9 +63,29 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
             <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : user.profilePhotoUrl?.src} alt={user.name} data-ai-hint="profile avatar" />
             <AvatarFallback className="text-4xl">{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-           <Button className="w-full max-w-xs md:w-auto" asChild>
-            <Link href={`/users/${user.id}/request-swap`}><ArrowRight className="mr-2 h-4 w-4" />Request Swap</Link>
-          </Button>
+           <Dialog>
+            <DialogTrigger asChild>
+                <Button className="w-full max-w-xs md:w-auto">
+                    <MessageSquarePlus className="mr-2 h-4 w-4" /> Request Swap
+                </Button>
+            </DialogTrigger>
+            {isClient && (
+                <DialogContent className="sm:max-w-[625px]">
+                    <DialogHeader>
+                        <DialogTitle>Request a Skill Swap with {user.name}</DialogTitle>
+                        <DialogDescription>Select the skills you&apos;d like to trade.</DialogDescription>
+                    </DialogHeader>
+                    {currentUser ? (
+                         <SwapRequestForm currentUser={currentUser} otherUser={user} />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center gap-4 py-8">
+                            <p>You need to be logged in to request a swap.</p>
+                            <Button onClick={() => router.push(`/login?redirect=/users/${user.id}`)}>Login</Button>
+                        </div>
+                    )}
+                </DialogContent>
+            )}
+           </Dialog>
         </div>
         <div className="flex-1 space-y-6">
           <div>
@@ -53,6 +110,14 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
               </CardContent>
             </Card>
           </div>
+           <Card>
+              <CardHeader>
+                <CardTitle>Rating and Feedback</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">No feedback yet.</p>
+              </CardContent>
+            </Card>
         </div>
       </div>
     </div>

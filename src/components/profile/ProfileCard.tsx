@@ -57,7 +57,7 @@ export function ProfileCard({ user }: ProfileCardProps) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button className="w-full" asChild>
-          <Link href={`/users/${user.id}/request-swap`}>Request Swap</Link>
+          <Link href={`/users/${user.id}`}>View Profile</Link>
         </Button>
       </CardFooter>
     </Card>
