@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -15,7 +16,7 @@ interface AuthContextType extends Session {
   isClient: boolean;
   login: (details: { email: string; name?: string }) => void;
   logout: () => void;
-  updateUser: (updatedProfile: Partial<UserProfile> & { id: string }) => void;
+  updateUser: (updatedProfile: Partial<UserProfile>) => void;
   addSwap: (newSwap: SkillSwap) => void;
 }
 
@@ -24,8 +25,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session>({
     user: null,
-    users: initialUsers,
-    swaps: initialSwaps,
+    users: [],
+    swaps: [],
   });
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
@@ -45,7 +46,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession({ user: sessionUser, users: sessionUsers, swaps: sessionSwaps });
     } catch (error) {
       console.error("Session storage error:", error);
-      // Fallback to initial data if session storage is corrupt or unavailable
       setSession({ user: null, users: initialUsers, swaps: initialSwaps });
     } finally {
       setLoading(false);
@@ -68,7 +68,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let userToLogin = prevSession.users.find(u => u.email === email);
       let updatedUsers = [...prevSession.users];
       
-      if (!userToLogin && name) { // This is a new user registration
+      // This is a new user registration
+      if (!userToLogin && name) { 
           const newUser: UserProfile = {
               id: `user_${new Date().getTime()}`,
               name,
@@ -81,28 +82,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               availability: ['Weekends'],
               ratings: { average: 0, count: 0 },
               bio: 'Just joined! Looking forward to swapping skills.',
-              profilePhotoUrl: 'https://placehold.co/128x128.png',
+              profilePhotoUrl: `https://placehold.co/128x128.png`,
           };
           updatedUsers.push(newUser);
           userToLogin = newUser;
-      } else if (userToLogin) { // This is an existing user login
-          // No action needed, userToLogin is already found
-      } else { // Login attempt for non-existent user without registration details
-          console.error("Login failed: User not found and no name provided for registration.");
-          return prevSession;
       }
 
       if (userToLogin?.status === 'banned') {
           console.error("This account has been banned.");
+          // Return previous state without changes to prevent login
           return prevSession;
       }
 
       if (userToLogin) {
+        // Create a new session object with the logged-in user and potentially updated user list
         const newSession = {...prevSession, user: userToLogin, users: updatedUsers};
         persistSession(newSession);
         return newSession;
       }
       
+      // If login is attempted for a non-existent user without registration details
+      console.error("Login failed: User not found and no name provided for registration.");
       return prevSession;
     });
   };
@@ -126,7 +126,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         u.id === userIdToUpdate ? { ...u, ...updatedProfile, id: u.id } : u
       );
       
-      const updatedSessionUser = { ...prevSession.user, ...updatedProfile };
+      const updatedSessionUser = updatedUsers.find(u => u.id === userIdToUpdate);
+
+      // Make sure we found the user, should always be true if they are logged in.
+      if (!updatedSessionUser) return prevSession;
 
       const newSession = { ...prevSession, user: updatedSessionUser, users: updatedUsers };
       persistSession(newSession);
