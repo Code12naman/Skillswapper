@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession({ user: sessionUser, users: sessionUsers, swaps: sessionSwaps });
     } catch (error) {
       console.error("Session storage error:", error);
+      // Reset to defaults on error
       setSession({ user: null, users: initialUsers, swaps: initialSwaps });
     } finally {
       setLoading(false);
@@ -49,31 +50,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   
   const login = ({ email, name }: { email: string; name?: string }) => {
-    let userToLogin = session.users.find(u => u.email === email);
-    let updatedUsers = [...session.users];
-    
-    if (!userToLogin && name) {
-        const newUser: UserProfile = {
-            id: `user_${new Date().getTime()}`,
-            name,
-            email,
-            isPublic: true,
-            skillsOffered: [],
-            skillsWanted: [],
-            availability: ['Weekends'],
-            ratings: { average: 0, count: 0 },
-            bio: 'Just joined! Looking forward to swapping skills.',
-            profilePhotoUrl: 'https://placehold.co/128x128.png',
-        };
-        updatedUsers.push(newUser);
-        userToLogin = newUser;
-    }
+    setSession(prevSession => {
+      let userToLogin = prevSession.users.find(u => u.email === email);
+      let updatedUsers = [...prevSession.users];
+      
+      // Handle new user registration
+      if (!userToLogin && name) {
+          const newUser: UserProfile = {
+              id: `user_${new Date().getTime()}`,
+              name,
+              email,
+              isPublic: true,
+              skillsOffered: [],
+              skillsWanted: [],
+              availability: ['Weekends'],
+              ratings: { average: 0, count: 0 },
+              bio: 'Just joined! Looking forward to swapping skills.',
+              profilePhotoUrl: 'https://placehold.co/128x128.png',
+          };
+          updatedUsers.push(newUser);
+          userToLogin = newUser;
+      }
 
-    if (userToLogin) {
-      setSession(prev => ({...prev, user: userToLogin, users: updatedUsers}));
-      sessionStorage.setItem('skill-swap-user', JSON.stringify(userToLogin));
-      sessionStorage.setItem('skill-swap-users', JSON.stringify(updatedUsers));
-    }
+      if (userToLogin) {
+        sessionStorage.setItem('skill-swap-user', JSON.stringify(userToLogin));
+        sessionStorage.setItem('skill-swap-users', JSON.stringify(updatedUsers));
+        return {...prevSession, user: userToLogin, users: updatedUsers};
+      }
+      
+      // If login fails, return previous state
+      return prevSession;
+    });
   };
 
   const logout = () => {
