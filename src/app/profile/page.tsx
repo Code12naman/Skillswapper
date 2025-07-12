@@ -26,15 +26,15 @@ export default function ProfilePage() {
 
   if (loading || !user) {
     return (
-      <div className="container mx-auto max-w-4xl py-12">
+      <div className="container mx-auto max-w-4xl py-12 px-4">
         <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
           <div className="flex flex-col items-center gap-4">
             <Skeleton className="h-32 w-32 rounded-full" />
             <Skeleton className="h-10 w-32" />
           </div>
-          <div className="flex-1 space-y-6">
-            <Skeleton className="h-10 w-1/2" />
-            <Skeleton className="h-6 w-3/4" />
+          <div className="flex-1 space-y-6 w-full">
+            <Skeleton className="h-10 w-1/2 mx-auto md:mx-0" />
+            <Skeleton className="h-6 w-3/4 mx-auto md:mx-0" />
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <Card><CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
               <Card><CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
@@ -46,20 +46,20 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-12">
+    <div className="container mx-auto max-w-4xl py-12 px-4">
        <Card>
-        <CardContent className="p-6">
-            <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
+        <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col items-center gap-6 text-center md:flex-row md:items-start md:text-left">
                 <div className="flex flex-col items-center gap-4">
                     <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                         <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : undefined} alt={user.name} data-ai-hint="profile avatar" />
                         <AvatarFallback className="text-4xl">{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                 </div>
-                <div className="flex-1 space-y-2 w-full text-center md:text-left">
-                    <div className='flex items-center justify-center md:justify-between'>
+                <div className="flex-1 space-y-2 w-full">
+                    <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
                         <h1 className="text-3xl font-bold">{user.name}</h1>
-                        <Button asChild>
+                        <Button asChild className="w-full md:w-auto">
                             <Link href="/profile/edit"><Edit className="mr-2 h-4 w-4"/>Edit Profile</Link>
                         </Button>
                     </div>
@@ -89,14 +89,14 @@ export default function ProfilePage() {
              <Separator className='my-8' />
              <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Settings</h3>
-                <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="flex flex-col gap-2 items-start justify-between rounded-lg border p-4 sm:flex-row sm:items-center">
                     <div>
                         <Label htmlFor="public-profile" className="font-bold">Public Profile</Label>
                         <p className="text-sm text-muted-foreground">Make your profile visible to others on the platform.</p>
                     </div>
                     <Switch id="public-profile" checked={user.isPublic} />
                 </div>
-                 <div className="flex items-center justify-between rounded-lg border p-4">
+                 <div className="flex flex-col gap-2 items-start justify-between rounded-lg border p-4 sm:flex-row sm:items-center">
                     <div>
                         <Label htmlFor="availability" className="font-bold">Availability</Label>
                         <p className="text-sm text-muted-foreground">Let others know when you are generally available to swap.</p>

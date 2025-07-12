@@ -39,17 +39,17 @@ export default function UserProfilePage() {
 
   if (isClient && authLoading) {
     return (
-        <div className="container mx-auto max-w-4xl py-12">
+        <div className="container mx-auto max-w-4xl py-12 px-4">
             <Skeleton className="h-64 w-full" />
         </div>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-12">
+    <div className="container mx-auto max-w-4xl py-12 px-4">
         <Card>
-            <CardContent className="p-6">
-                <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
+            <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col items-center gap-6 text-center md:flex-row md:items-start md:text-left">
                     <div className="flex w-full flex-col items-center gap-4 md:w-auto">
                         <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
                             <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : undefined} alt={user.name} data-ai-hint="profile avatar" />
@@ -79,7 +79,7 @@ export default function UserProfilePage() {
                             )}
                         </Dialog>
                     </div>
-                    <div className="flex-1 space-y-2 w-full text-center md:text-left">
+                    <div className="flex-1 space-y-2 w-full">
                         <h1 className="text-3xl font-bold">{user.name}</h1>
                         {user.location && <p className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground"><MapPin className="h-4 w-4" />{user.location}</p>}
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-muted-foreground">
