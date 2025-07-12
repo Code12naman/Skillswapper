@@ -1,5 +1,3 @@
-// This is a new file
-
 'use client';
 
 import { Button } from '@/components/ui/button';
