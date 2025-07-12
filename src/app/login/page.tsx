@@ -1,5 +1,5 @@
 import { LoginForm } from '@/components/auth/LoginForm';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -15,6 +15,11 @@ export default function LoginPage() {
         <CardContent>
           <LoginForm />
         </CardContent>
+        <CardFooter className="flex justify-center">
+            <p className="text-sm text-muted-foreground">
+                Don't have an account? <Link href="/register" className="text-primary hover:underline">Sign up</Link>
+            </p>
+        </CardFooter>
       </Card>
     </div>
   );
