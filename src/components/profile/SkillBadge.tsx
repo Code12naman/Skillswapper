@@ -7,11 +7,11 @@ interface SkillBadgeProps {
   className?: string;
 }
 
-export function SkillBadge({ skill, variant = 'offered', className }: SkillBadgeProps) {
+export function SkillBadge({ skill, variant, className }: SkillBadgeProps) {
   return (
     <Badge
-      variant={variant === 'offered' ? 'default' : 'secondary'}
-      className={cn('bg-opacity-80', className)}
+      variant={variant === 'wanted' ? 'secondary' : 'default'}
+      className={cn(className)}
     >
       {skill}
     </Badge>
