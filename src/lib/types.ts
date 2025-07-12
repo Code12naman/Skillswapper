@@ -4,6 +4,8 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  role?: 'user' | 'admin';
+  status?: 'active' | 'banned';
   location?: string;
   profilePhotoUrl?: string | StaticImageData;
   skillsOffered: string[];

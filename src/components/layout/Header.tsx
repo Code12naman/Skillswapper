@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Home, Repeat } from 'lucide-react';
+import { LogOut, User, Home, Repeat, ShieldCheck } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -68,6 +68,11 @@ export function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {user.role === 'admin' && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin"><ShieldCheck className="mr-2 h-4 w-4" />Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
                   </DropdownMenuItem>

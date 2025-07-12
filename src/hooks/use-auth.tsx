@@ -23,8 +23,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session>({
     user: null,
-    users: initialUsers,
-    swaps: initialSwaps,
+    users: [],
+    swaps: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -42,24 +42,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession({ user: sessionUser, users: sessionUsers, swaps: sessionSwaps });
     } catch (error) {
       console.error("Session storage error:", error);
-      // Reset to defaults on error
       setSession({ user: null, users: initialUsers, swaps: initialSwaps });
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const persistSession = (newSession: Session) => {
+    sessionStorage.setItem('skill-swap-user', JSON.stringify(newSession.user));
+    sessionStorage.setItem('skill-swap-users', JSON.stringify(newSession.users));
+    sessionStorage.setItem('skill-swap-swaps', JSON.stringify(newSession.swaps));
+    setSession(newSession);
+  };
   
   const login = ({ email, name }: { email: string; name?: string }) => {
     setSession(prevSession => {
       let userToLogin = prevSession.users.find(u => u.email === email);
       let updatedUsers = [...prevSession.users];
       
-      // Handle new user registration
       if (!userToLogin && name) {
           const newUser: UserProfile = {
               id: `user_${new Date().getTime()}`,
               name,
               email,
+              role: 'user',
+              status: 'active',
               isPublic: true,
               skillsOffered: [],
               skillsWanted: [],
@@ -72,41 +79,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           userToLogin = newUser;
       }
 
+      if (userToLogin?.status === 'banned') {
+          // In a real app, you'd show a more specific error.
+          console.error("This account has been banned.");
+          return prevSession; // Prevent login
+      }
+
       if (userToLogin) {
-        sessionStorage.setItem('skill-swap-user', JSON.stringify(userToLogin));
-        sessionStorage.setItem('skill-swap-users', JSON.stringify(updatedUsers));
-        return {...prevSession, user: userToLogin, users: updatedUsers};
+        const newSession = {...prevSession, user: userToLogin, users: updatedUsers};
+        persistSession(newSession);
+        return newSession;
       }
       
-      // If login fails, return previous state
       return prevSession;
     });
   };
 
   const logout = () => {
-    setSession(prev => ({...prev, user: null}));
-    sessionStorage.removeItem('skill-swap-user');
+    const newSession = {...session, user: null};
+    persistSession(newSession);
   };
 
-  const updateUser = useCallback((updatedProfile: Partial<UserProfile>) => {
+  const updateUser = useCallback((updatedProfile: Partial<UserProfile> & { id: string }) => {
     setSession(prevSession => {
-      if (!prevSession.user) return prevSession;
+      const updatedUsers = prevSession.users.map(u => 
+        u.id === updatedProfile.id ? { ...u, ...updatedProfile } : u
+      );
       
-      const updatedUser = { ...prevSession.user, ...updatedProfile };
-      const updatedUsers = prevSession.users.map(u => u.id === updatedUser.id ? updatedUser : u);
+      let updatedSessionUser = prevSession.user;
+      if (prevSession.user?.id === updatedProfile.id) {
+        updatedSessionUser = { ...prevSession.user, ...updatedProfile };
+      }
 
-      sessionStorage.setItem('skill-swap-user', JSON.stringify(updatedUser));
-      sessionStorage.setItem('skill-swap-users', JSON.stringify(updatedUsers));
-      
-      return { ...prevSession, user: updatedUser, users: updatedUsers };
+      const newSession = { ...prevSession, user: updatedSessionUser, users: updatedUsers };
+      persistSession(newSession);
+      return newSession;
     });
   }, []);
 
   const addSwap = (newSwap: SkillSwap) => {
     setSession(prev => {
         const newSwaps = [...prev.swaps, newSwap];
+        const newSession = {...prev, swaps: newSwaps};
         sessionStorage.setItem('skill-swap-swaps', JSON.stringify(newSwaps));
-        return {...prev, swaps: newSwaps};
+        return newSession;
     });
   };
 
