@@ -34,10 +34,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (sessionSwaps) {
         setSwaps(JSON.parse(sessionSwaps));
       } else {
-        setSwaps(initialSwaps); // Initialize with mock data if none in session
+        // If no swaps in session, start with the mock data
+        sessionStorage.setItem('skill-swap-swaps', JSON.stringify(initialSwaps));
+        setSwaps(initialSwaps);
       }
     } catch (error) {
       // Could be running in an environment without sessionStorage
+      console.error("Session storage not available.", error);
     }
     setLoading(false);
   }, []);
@@ -66,41 +69,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = ({ email, name }: { email: string; name?: string }) => {
     setLoading(true);
-    let userToLogin: UserProfile;
-
-    if (name) {
-      // New registration
-      userToLogin = {
-        id: new Date().getTime().toString(),
-        name,
-        email,
-        isPublic: true,
-        skillsOffered: [],
-        skillsWanted: [],
-        availability: ['Weekends'],
-        ratings: { average: 0, count: 0 },
-        bio: 'Just joined! Looking forward to swapping skills.',
-      };
-    } else {
-      // Existing user
-      userToLogin = mockUsers.find(u => u.email === email) || mockUsers[0];
-    }
+    // Find if user exists in our mock data or session storage mock data
+    let existingUser = mockUsers.find(u => u.email === email);
     
-    updateUserInSession(userToLogin);
-    // On login, filter swaps for the logged-in user to simulate a real DB fetch
-    const userSwaps = initialSwaps.filter(s => s.requesterId === userToLogin.id || s.receiverId === userToLogin.id);
-    updateSwapsInSession(userSwaps);
+    // In a real app, you would have a single source of truth (your backend DB)
+    // Here we merge mock data and potential new users.
+    // This is a simplified logic for mock purposes.
+    if (!existingUser) {
+        // Let's pretend our "database" can grow
+        const potentialNewUser = {
+            id: new Date().getTime().toString(),
+            name: name || 'New User',
+            email,
+            isPublic: true,
+            skillsOffered: [],
+            skillsWanted: [],
+            availability: ['Weekends'],
+            ratings: { average: 0, count: 0 },
+            bio: 'Just joined! Looking forward to swapping skills.',
+        };
+        // If a name is provided, it's a registration attempt.
+        if (name) {
+            // In a real app, you'd save this to the DB.
+            // For this mock, we'll just use this new user object.
+            existingUser = potentialNewUser;
+            // Add to our runtime list of users
+            if (!mockUsers.some(u => u.email === email)) {
+                mockUsers.push(existingUser);
+            }
+        } else {
+            // Login attempt for a user that doesn't exist. For mock, let's log in as first user.
+            existingUser = mockUsers[0];
+        }
+    }
+
+    updateUserInSession(existingUser);
+
+    try {
+      const allSwapsJSON = sessionStorage.getItem('skill-swap-swaps');
+      const allSwaps = allSwapsJSON ? JSON.parse(allSwapsJSON) : initialSwaps;
+      const userSwaps = allSwaps.filter((s: SkillSwap) => s.requesterId === existingUser!.id || s.receiverId === existingUser!.id);
+      setSwaps(userSwaps); // Only set the swaps for the logged in user
+    } catch(e) {
+      console.error(e);
+      setSwaps([]);
+    }
     
     setLoading(false);
   };
 
   const logout = () => {
     updateUserInSession(null);
-    updateSwapsInSession([]); // Clear swaps on logout
+    setSwaps([]); // Clear swaps on logout
     try {
       sessionStorage.removeItem('skill-swap-swaps');
+      sessionStorage.removeItem('skill-swap-user');
     } catch (error) {
-      console.error("Could not remove swaps from session storage", error);
+      console.error("Could not clear session storage", error);
     }
   };
 
@@ -112,8 +137,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addSwap = (newSwap: SkillSwap) => {
-    const updatedSwaps = [...swaps, newSwap];
-    updateSwapsInSession(updatedSwaps);
+    try {
+      const allSwapsJSON = sessionStorage.getItem('skill-swap-swaps');
+      let allSwaps = allSwapsJSON ? JSON.parse(allSwapsJSON) : initialSwaps;
+      allSwaps.push(newSwap);
+      updateSwapsInSession(allSwaps);
+       // After adding, filter to show only the current user's swaps.
+      if (user) {
+          const userSwaps = allSwaps.filter((s: SkillSwap) => s.requesterId === user.id || s.receiverId === user.id);
+          setSwaps(userSwaps);
+      }
+    } catch(e) {
+        console.error(e)
+    }
   };
 
   const value = { user, loading, login, logout, updateUser, swaps, addSwap };
