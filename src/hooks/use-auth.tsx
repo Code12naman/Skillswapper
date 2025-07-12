@@ -14,7 +14,7 @@ interface AuthContextType extends Session {
   loading: boolean;
   login: (details: { email: string; name?: string }) => void;
   logout: () => void;
-  updateUser: (updatedProfile: Partial<UserProfile>) => void;
+  updateUser: (updatedProfile: Partial<UserProfile> & { id: string }) => void;
   addSwap: (newSwap: SkillSwap) => void;
 }
 
@@ -80,9 +80,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (userToLogin?.status === 'banned') {
-          // In a real app, you'd show a more specific error.
           console.error("This account has been banned.");
-          return prevSession; // Prevent login
+          return prevSession;
       }
 
       if (userToLogin) {
@@ -97,7 +96,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     const newSession = {...session, user: null};
-    persistSession(newSession);
+    sessionStorage.removeItem('skill-swap-user');
+    setSession(newSession);
   };
 
   const updateUser = useCallback((updatedProfile: Partial<UserProfile> & { id: string }) => {
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(prev => {
         const newSwaps = [...prev.swaps, newSwap];
         const newSession = {...prev, swaps: newSwaps};
-        sessionStorage.setItem('skill-swap-swaps', JSON.stringify(newSwaps));
+        persistSession(newSession);
         return newSession;
     });
   };
