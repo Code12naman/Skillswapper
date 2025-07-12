@@ -56,17 +56,17 @@ export function LoginForm() {
         )}
       </div>
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link href="#" className="text-sm font-medium text-primary hover:underline">
-                Forgot password?
-            </Link>
-        </div>
+        <Label htmlFor="password">Password</Label>
         <Input id="password" type="password" {...form.register('password')} />
         {form.formState.errors.password && (
           <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
         )}
       </div>
+       <div className="text-right">
+            <Link href="#" className="text-sm font-medium text-primary hover:underline">
+                Forgot password?
+            </Link>
+        </div>
       <Button type="submit" className="w-full">
         Login
       </Button>

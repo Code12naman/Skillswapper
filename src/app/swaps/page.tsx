@@ -3,7 +3,7 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardDescription, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import { mockSwaps } from '@/lib/mock-data';
 import { formatDistanceToNow } from 'date-fns';
 import type { SkillSwap } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 export default function SwapsPage() {
   const { user, loading } = useAuth();
@@ -44,6 +46,15 @@ export default function SwapsPage() {
       { name: swap.receiverName, photo: swap.receiverPhotoUrl } :
       { name: swap.requesterName, photo: swap.requesterPhotoUrl };
 
+    const getStatusVariant = (status: SkillSwap['status']) => {
+        switch(status) {
+            case 'accepted': return 'default';
+            case 'rejected': return 'destructive';
+            case 'pending': return 'secondary';
+            default: return 'outline';
+        }
+    }
+
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between p-4">
@@ -52,11 +63,14 @@ export default function SwapsPage() {
                         <AvatarImage src={typeof otherPerson.photo === 'string' ? otherPerson.photo : otherPerson.photo?.src} alt={otherPerson.name} />
                         <AvatarFallback>{otherPerson.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="font-semibold">{otherPerson.name}</div>
+                    <div>
+                      <div className="font-semibold">{otherPerson.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(swap.createdAt, { addSuffix: true })}
+                      </div>
+                    </div>
                 </div>
-                 <div className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(swap.createdAt, { addSuffix: true })}
-                </div>
+                <Badge variant={getStatusVariant(swap.status)} className="capitalize">{swap.status}</Badge>
             </CardHeader>
             <CardContent className="space-y-4 p-4 pt-0">
                 <div className="flex items-center justify-around rounded-lg bg-muted p-3 text-center">
@@ -70,32 +84,32 @@ export default function SwapsPage() {
                         <p className="font-bold">{swap.requestedSkill}</p>
                     </div>
                 </div>
-                {swap.message && <p className="text-sm text-muted-foreground p-3 border rounded-lg">"{swap.message}"</p>}
-                
-                {swap.status === 'pending' && (
-                    <div className="flex gap-2">
+            </CardContent>
+             {swap.status === 'pending' && (
+                <CardFooter className="p-4 pt-0">
+                    <div className="flex gap-2 w-full">
                         {isRequester ? (
                             <Button variant="outline" className="w-full">Cancel Request</Button>
                         ) : (
                             <>
                                 <Button variant="destructive" className="w-full"><X className="mr-2 h-4 w-4" />Reject</Button>
-                                <Button className="w-full"><Check className="mr-2 h-4 w-4" />Accept</Button>
+                                <Button variant="default" className="w-full"><Check className="mr-2 h-4 w-4" />Accept</Button>
                             </>
                         )}
                     </div>
-                )}
-            </CardContent>
+                </CardFooter>
+            )}
         </Card>
     )
   }
 
   return (
     <div className="container mx-auto max-w-4xl py-12">
-      <h1 className="mb-8 text-4xl font-bold">My Skill Swaps</h1>
+      <h1 className="mb-8 text-4xl font-bold">Swap Requests</h1>
       <Tabs defaultValue="incoming">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="incoming">Incoming Requests ({incomingRequests.length})</TabsTrigger>
-          <TabsTrigger value="outgoing">Outgoing Requests ({outgoingRequests.length})</TabsTrigger>
+          <TabsTrigger value="incoming">Incoming ({incomingRequests.length})</TabsTrigger>
+          <TabsTrigger value="outgoing">Outgoing ({outgoingRequests.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="incoming">
             <div className="space-y-4 pt-4">
@@ -116,6 +130,27 @@ export default function SwapsPage() {
             </div>
         </TabsContent>
       </Tabs>
+      <div className="mt-12 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious href="#" />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink href="#">1</PaginationLink>
+              </PaginationItem>
+               <PaginationItem>
+                <PaginationLink href="#" isActive>2</PaginationLink>
+              </PaginationItem>
+               <PaginationItem>
+                <PaginationLink href="#">3</PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext href="#" />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
     </div>
   );
 }
