@@ -62,11 +62,11 @@ export function LoginForm() {
           <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
         )}
       </div>
-       <div className="text-right">
-            <Link href="#" className="text-sm font-medium text-primary hover:underline">
-                Forgot password?
-            </Link>
-        </div>
+      <div className="text-right">
+        <Link href="#" className="text-sm font-medium text-primary hover:underline">
+            Forgot password?
+        </Link>
+      </div>
       <Button type="submit" className="w-full">
         Login
       </Button>
