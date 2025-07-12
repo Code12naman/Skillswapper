@@ -19,7 +19,7 @@ const formSchema = z.object({
 export function RegisterForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { login } = useAuth(); // Using login to simulate new user session
+  const { login } = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -30,14 +30,12 @@ export function RegisterForm() {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // In a real app, you'd call Firebase to create a user.
-    // For this mock, we'll just log them in.
     login({ email: values.email, name: values.name });
     toast({
       title: 'Account Created',
       description: "Welcome! Your account has been successfully created.",
     });
-    router.push('/profile'); // Redirect to profile to complete setup
+    router.push('/profile');
   };
 
   return (
