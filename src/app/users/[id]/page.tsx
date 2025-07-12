@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ArrowRight, MapPin, Star, MessageSquarePlus, CheckCircle2 } from 'lucide-react';
 import { SkillBadge } from '@/components/profile/SkillBadge';
 import { mockUsers } from '@/lib/mock-data';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import {
   Dialog,
@@ -21,10 +21,12 @@ import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
+export default function UserProfilePage() {
+  const params = useParams();
   const { user: currentUser, loading: authLoading } = useAuth();
   const router = useRouter();
-  const user = mockUsers.find(u => u.id === params.id);
+  const id = typeof params.id === 'string' ? params.id : '';
+  const user = mockUsers.find(u => u.id === id);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
