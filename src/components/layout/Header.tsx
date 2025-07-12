@@ -18,7 +18,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export function Header() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, isClient } = useAuth();
   const pathname = usePathname();
 
   const navLinks = [
@@ -46,7 +46,7 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end gap-4">
-            {loading ? (
+            {(loading || !isClient) ? (
               <Skeleton className="h-10 w-10 rounded-full" />
             ) : user ? (
               <DropdownMenu>

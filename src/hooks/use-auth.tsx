@@ -12,6 +12,7 @@ interface Session {
 
 interface AuthContextType extends Session {
   loading: boolean;
+  isClient: boolean;
   login: (details: { email: string; name?: string }) => void;
   logout: () => void;
   updateUser: (updatedProfile: Partial<UserProfile> & { id: string }) => void;
@@ -23,12 +24,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session>({
     user: null,
-    users: [],
-    swaps: [],
+    users: initialUsers,
+    swaps: initialSwaps,
   });
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     setLoading(true);
     try {
       const storedUser = sessionStorage.getItem('skill-swap-user');
@@ -42,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession({ user: sessionUser, users: sessionUsers, swaps: sessionSwaps });
     } catch (error) {
       console.error("Session storage error:", error);
+      // Fallback to initial data if session storage is corrupt or unavailable
       setSession({ user: null, users: initialUsers, swaps: initialSwaps });
     } finally {
       setLoading(false);
@@ -49,9 +53,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const persistSession = (newSession: Session) => {
-    sessionStorage.setItem('skill-swap-user', JSON.stringify(newSession.user));
-    sessionStorage.setItem('skill-swap-users', JSON.stringify(newSession.users));
-    sessionStorage.setItem('skill-swap-swaps', JSON.stringify(newSession.swaps));
+    try {
+        sessionStorage.setItem('skill-swap-user', JSON.stringify(newSession.user));
+        sessionStorage.setItem('skill-swap-users', JSON.stringify(newSession.users));
+        sessionStorage.setItem('skill-swap-swaps', JSON.stringify(newSession.swaps));
+    } catch (error) {
+        console.error("Failed to persist session:", error);
+    }
     setSession(newSession);
   };
   
@@ -60,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let userToLogin = prevSession.users.find(u => u.email === email);
       let updatedUsers = [...prevSession.users];
       
-      if (!userToLogin && name) {
+      if (!userToLogin && name) { // This is a new user registration
           const newUser: UserProfile = {
               id: `user_${new Date().getTime()}`,
               name,
@@ -77,6 +85,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           };
           updatedUsers.push(newUser);
           userToLogin = newUser;
+      } else if (userToLogin) { // This is an existing user login
+          // No action needed, userToLogin is already found
+      } else { // Login attempt for non-existent user without registration details
+          console.error("Login failed: User not found and no name provided for registration.");
+          return prevSession;
       }
 
       if (userToLogin?.status === 'banned') {
@@ -95,21 +108,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    const newSession = {...session, user: null};
-    sessionStorage.removeItem('skill-swap-user');
-    setSession(newSession);
+    setSession(prev => {
+        const newSession = {...prev, user: null};
+        persistSession(newSession);
+        return newSession;
+    });
   };
 
-  const updateUser = useCallback((updatedProfile: Partial<UserProfile> & { id: string }) => {
+  const updateUser = useCallback((updatedProfile: Partial<UserProfile>) => {
     setSession(prevSession => {
+      // The user must be logged in to update their profile.
+      if (!prevSession.user) return prevSession;
+      
+      const userIdToUpdate = prevSession.user.id;
+
       const updatedUsers = prevSession.users.map(u => 
-        u.id === updatedProfile.id ? { ...u, ...updatedProfile } : u
+        u.id === userIdToUpdate ? { ...u, ...updatedProfile, id: u.id } : u
       );
       
-      let updatedSessionUser = prevSession.user;
-      if (prevSession.user?.id === updatedProfile.id) {
-        updatedSessionUser = { ...prevSession.user, ...updatedProfile };
-      }
+      const updatedSessionUser = { ...prevSession.user, ...updatedProfile };
 
       const newSession = { ...prevSession, user: updatedSessionUser, users: updatedUsers };
       persistSession(newSession);
@@ -126,7 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const value = { ...session, loading, login, logout, updateUser, addSwap };
+  const value = { ...session, loading, isClient, login, logout, updateUser, addSwap };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
