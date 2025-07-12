@@ -52,7 +52,7 @@ export default function UserProfilePage() {
                 <div className="flex flex-col items-center gap-8 md:flex-row md:items-start">
                     <div className="flex w-full flex-col items-center gap-4 md:w-auto">
                         <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-                            <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : user.profilePhotoUrl?.src} alt={user.name} data-ai-hint="profile avatar" />
+                            <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : undefined} alt={user.name} data-ai-hint="profile avatar" />
                             <AvatarFallback className="text-4xl">{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <Dialog>

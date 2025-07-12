@@ -59,7 +59,7 @@ export default function SwapsPage() {
             <CardHeader className="flex flex-row items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                     <Avatar>
-                        <AvatarImage src={typeof otherPerson.photo === 'string' ? otherPerson.photo : otherPerson.photo?.src} alt={otherPerson.name} />
+                        <AvatarImage src={typeof otherPerson.photo === 'string' ? otherPerson.photo : undefined} alt={otherPerson.name} />
                         <AvatarFallback>{otherPerson.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>

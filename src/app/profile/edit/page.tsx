@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,11 +16,13 @@ export default function EditProfilePage() {
   const { user, loading, updateUser } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [skillsOffered, setSkillsOffered] = useState('');
   const [skillsWanted, setSkillsWanted] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   
   useEffect(() => {
     if (!loading && !user) {
@@ -31,8 +33,20 @@ export default function EditProfilePage() {
       setBio(user.bio || '');
       setSkillsOffered(user.skillsOffered.join(', '));
       setSkillsWanted(user.skillsWanted.join(', '));
+      setProfilePhoto(typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : null);
     }
   }, [user, loading, router]);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +60,7 @@ export default function EditProfilePage() {
       bio,
       skillsOffered: offeredArray,
       skillsWanted: wantedArray,
+      profilePhotoUrl: profilePhoto || undefined,
     });
     
     toast({
@@ -90,10 +105,18 @@ export default function EditProfilePage() {
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="relative">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : user.profilePhotoUrl?.src} alt={user.name} />
+                  <AvatarImage src={profilePhoto || undefined} alt={user.name} />
                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                 <Button size="sm" className="absolute -bottom-2 -right-2 rounded-full">Edit</Button>
+                <Input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                  ref={fileInputRef}
+                />
+                 <Button type="button" size="sm" className="absolute -bottom-2 -right-2 rounded-full" onClick={() => fileInputRef.current?.click()}>Edit</Button>
               </div>
               <div className="w-full space-y-2">
                 <Label htmlFor="name">Name</Label>

@@ -16,7 +16,7 @@ export function ProfileCard({ user }: ProfileCardProps) {
       <CardHeader className="p-4">
         <div className="flex items-center gap-4">
             <Avatar className="h-12 w-12 border">
-                <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : user.profilePhotoUrl?.src} alt={user.name} data-ai-hint="profile picture" />
+                <AvatarImage src={typeof user.profilePhotoUrl === 'string' ? user.profilePhotoUrl : undefined} alt={user.name} data-ai-hint="profile picture" />
                 <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
